@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Kartei">
+<title>Kartei</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f8fafc; --bg2: #ffffff; --border: #e2e8f0; --text: #1e293b;
+    --text2: #64748b; --text3: #94a3b8; --indigo: #4f46e5; --indigo2: #4338ca;
+    --emerald: #10b981; --rose: #f43f5e; --nav-bg: rgba(255,255,255,0.85);
+    --card-bg: #ffffff; --card-border: #e2e8f0; --shadow: rgba(0,0,0,0.06);
+    --modal-overlay: rgba(15,23,42,0.5);
+    --amber-bg: #fffbeb; --amber-border: #fde68a; --amber-badge: #fef3c7; --amber-text: #b45309; --amber-dot: #fbbf24; --amber-btn: #f59e0b;
+    --violet-bg: #f5f3ff; --violet-border: #ddd6fe; --violet-badge: #ede9fe; --violet-text: #7c3aed; --violet-dot: #a78bfa; --violet-btn: #8b5cf6;
+    --emerald-bg: #ecfdf5; --emerald-border: #a7f3d0; --emerald-badge: #d1fae5; --emerald-text: #065f46; --emerald-dot: #34d399; --emerald-btn: #10b981;
+    --sky-bg: #f0f9ff; --sky-border: #bae6fd; --sky-badge: #e0f2fe; --sky-text: #0369a1; --sky-dot: #38bdf8; --sky-btn: #0ea5e9;
+    --rose-bg: #fff1f2; --rose-border: #fecdd3; --rose-badge: #ffe4e6; --rose-text: #be123c; --rose-dot: #fb7185; --rose-btn: #f43f5e;
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bot: env(safe-area-inset-bottom, 0px);
+  }
+  .dark {
+    --bg: #0f172a; --bg2: #1e293b; --border: #334155; --text: #f1f5f9;
+    --text2: #94a3b8; --text3: #475569; --nav-bg: rgba(15,23,42,0.92);
+    --card-bg: #1e293b; --card-border: #334155; --shadow: rgba(0,0,0,0.3);
+    --amber-bg: rgba(120,53,15,0.3); --amber-border: rgba(146,64,14,0.5); --amber-badge: rgba(120,53,15,0.4); --amber-text: #fcd34d;
+    --violet-bg: rgba(76,29,149,0.3); --violet-border: rgba(91,33,182,0.5); --violet-badge: rgba(76,29,149,0.4); --violet-text: #c4b5fd;
+    --emerald-bg: rgba(6,78,59,0.3); --emerald-border: rgba(6,95,70,0.5); --emerald-badge: rgba(6,78,59,0.4); --emerald-text: #6ee7b7;
+    --sky-bg: rgba(12,74,110,0.3); --sky-border: rgba(7,89,133,0.5); --sky-badge: rgba(12,74,110,0.4); --sky-text: #7dd3fc;
+    --rose-bg: rgba(136,19,55,0.3); --rose-border: rgba(159,18,57,0.5); --rose-badge: rgba(136,19,55,0.4); --rose-text: #fda4af;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg); color: var(--text);
+    min-height: 100vh; min-height: 100dvh;
+    -webkit-tap-highlight-color: transparent;
+    transition: background .2s, color .2s;
+  }
+
+  /* NAV */
+  nav {
+    position: sticky; top: 0; z-index: 40;
+    background: var(--nav-bg); border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    padding-top: var(--safe-top);
+  }
+  .nav-inner {
+    max-width: 900px; margin: 0 auto;
+    padding: 0 16px; height: 52px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .logo { display: flex; align-items: center; gap: 8px; }
+  .logo-icon {
+    width: 28px; height: 28px; background: var(--indigo);
+    border-radius: 8px; display: flex; align-items: center;
+    justify-content: center; color: #fff; font-weight: 700; font-size: 14px;
+  }
+  .logo-text { font-weight: 600; font-size: 16px; }
+  .nav-actions { display: flex; align-items: center; gap: 8px; }
+
+  /* BUTTONS */
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-weight: 500; border-radius: 12px; padding: 8px 14px;
+    font-size: 14px; border: none; cursor: pointer; transition: all .15s;
+    -webkit-user-select: none; user-select: none;
+  }
+  .btn:active { transform: scale(0.97); }
+  .btn-primary { background: var(--indigo); color: #fff; }
+  .btn-primary:hover { background: var(--indigo2); }
+  .btn-ghost { background: transparent; color: var(--text2); }
+  .btn-ghost:hover { background: var(--border); }
+  .btn-danger { background: #f43f5e; color: #fff; }
+  .btn-sm { padding: 6px 10px; font-size: 13px; border-radius: 10px; }
+  .btn-icon {
+    width: 36px; height: 36px; border-radius: 10px; padding: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--bg2); border: 1px solid var(--border); color: var(--text2); cursor: pointer;
+    font-size: 18px; transition: all .15s;
+  }
+  .btn-icon:active { transform: scale(0.95); }
+
+  /* CONTENT */
+  .content { max-width: 900px; margin: 0 auto; padding: 28px 16px; padding-bottom: calc(28px + var(--safe-bot)); }
+
+  /* STATS */
+  .stats-bar {
+    display: flex; gap: 0; margin-bottom: 28px;
+    background: var(--card-bg); border: 1px solid var(--card-border);
+    border-radius: 16px; padding: 16px 20px;
+  }
+  .stat-item { display: flex; align-items: center; gap: 16px; flex: 1; }
+  .stat-divider { width: 1px; background: var(--border); margin: 0 4px; }
+  .stat-num { font-size: 22px; font-weight: 700; }
+  .stat-label { font-size: 11px; color: var(--text3); margin-top: 2px; }
+
+  /* TOPIC GRID */
+  .topic-grid { display: grid; gap: 12px; grid-template-columns: 1fr 1fr; }
+  @media (min-width: 600px) { .topic-grid { grid-template-columns: repeat(3, 1fr); } }
+
+  .topic-card {
+    border-radius: 18px; border: 1px solid; padding: 16px;
+    cursor: pointer; transition: all .2s; position: relative;
+  }
+  .topic-card:active { transform: scale(0.98); }
+  .topic-card-dot { width: 10px; height: 10px; border-radius: 50%; margin-bottom: 12px; }
+  .topic-card h2 { font-size: 15px; font-weight: 600; margin-bottom: 4px; line-height: 1.3; }
+  .topic-card-meta { font-size: 12px; color: var(--text3); margin-bottom: 12px; }
+  .topic-badges { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 12px; }
+  .badge {
+    font-size: 11px; padding: 3px 8px; border-radius: 8px; font-weight: 500;
+  }
+  .learn-btn {
+    width: 100%; text-align: center; font-size: 12px; font-weight: 600;
+    padding: 9px; border-radius: 12px; border: none; cursor: pointer;
+    color: #fff; transition: all .15s;
+  }
+  .learn-btn:active { transform: scale(0.97); }
+  .learn-btn:disabled { background: var(--border) !important; color: var(--text3); cursor: not-allowed; }
+
+  .add-topic-card {
+    border-radius: 18px; border: 2px dashed var(--border);
+    padding: 16px; cursor: pointer; transition: all .2s;
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 8px; min-height: 160px;
+    background: transparent;
+  }
+  .add-topic-card:active { transform: scale(0.97); }
+  .add-icon {
+    width: 40px; height: 40px; border-radius: 12px; font-size: 22px;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--bg2); color: var(--text3);
+  }
+  .add-label { font-size: 13px; font-weight: 500; color: var(--text3); }
+
+  /* EMPTY STATE */
+  .empty { text-align: center; padding: 60px 20px; }
+  .empty-icon { font-size: 48px; margin-bottom: 12px; }
+  .empty h2 { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
+  .empty p { font-size: 14px; color: var(--text2); margin-bottom: 20px; }
+
+  /* TOPIC VIEW */
+  .back-btn {
+    display: flex; align-items: center; gap: 4px;
+    background: none; border: none; cursor: pointer;
+    color: var(--text2); font-size: 14px; padding: 4px 0;
+  }
+  .back-btn:active { opacity: .6; }
+  .topic-header {
+    border-radius: 18px; border: 1px solid; padding: 20px;
+    margin-bottom: 24px; display: flex; flex-direction: column; gap: 12px;
+  }
+  .topic-header h1 { font-size: 22px; font-weight: 700; }
+  .topic-header p { font-size: 13px; color: var(--text2); margin-top: 2px; }
+
+  .section-title {
+    font-size: 11px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: .08em; color: var(--text3); margin-bottom: 12px;
+  }
+  .subtopic-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
+  .tab {
+    padding: 7px 14px; border-radius: 12px; font-size: 14px; font-weight: 500;
+    border: 1px solid var(--card-border); background: var(--card-bg);
+    cursor: pointer; color: var(--text); transition: all .15s; position: relative;
+  }
+  .tab.active { border-color: transparent; }
+  .tab:active { transform: scale(0.96); }
+  .tab-del {
+    position: absolute; top: -6px; right: -6px;
+    width: 16px; height: 16px; background: #f43f5e; color: #fff;
+    border-radius: 50%; border: none; cursor: pointer;
+    font-size: 11px; display: flex; align-items: center; justify-content: center;
+    opacity: 0; transition: opacity .15s;
+  }
+  .tab:hover .tab-del, .tab-del:focus { opacity: 1; }
+
+  .cards-grid { display: grid; gap: 10px; }
+  @media (min-width: 500px) { .cards-grid { grid-template-columns: 1fr 1fr; } }
+
+  .card-item {
+    background: var(--card-bg); border: 1px solid var(--card-border);
+    border-radius: 16px; padding: 16px; position: relative;
+  }
+  .card-q-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: #6366f1; margin-bottom: 6px; }
+  .card-q { font-size: 14px; font-weight: 600; margin-bottom: 12px; white-space: pre-wrap; line-height: 1.4; }
+  .card-divider { height: 1px; background: var(--border); margin-bottom: 12px; }
+  .card-a-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: #10b981; margin-bottom: 6px; }
+  .card-a { font-size: 13px; color: var(--text2); white-space: pre-wrap; line-height: 1.5; }
+  .card-del {
+    position: absolute; top: 10px; right: 10px;
+    width: 22px; height: 22px; background: rgba(244,63,94,.8);
+    color: #fff; border: none; border-radius: 8px; cursor: pointer;
+    font-size: 14px; display: flex; align-items: center; justify-content: center;
+    opacity: 0; transition: opacity .15s;
+  }
+  .card-item:hover .card-del, .card-del:focus { opacity: 1; }
+
+  /* LEARN MODE */
+  .learn-screen {
+    min-height: 100vh; min-height: 100dvh;
+    display: flex; flex-direction: column;
+    background: linear-gradient(135deg, var(--bg) 0%, #eef2ff 100%);
+  }
+  .dark .learn-screen { background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); }
+
+  .learn-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 16px; padding-top: calc(12px + var(--safe-top));
+    border-bottom: 1px solid var(--border);
+    background: var(--nav-bg); backdrop-filter: blur(12px);
+  }
+  .learn-title-block { text-align: center; }
+  .learn-subtitle { font-size: 11px; color: var(--text3); }
+  .learn-counter { font-size: 14px; font-weight: 600; }
+  .learn-score { display: flex; gap: 12px; font-size: 13px; font-weight: 600; }
+  .score-k { color: #10b981; }
+  .score-u { color: #f43f5e; }
+
+  .progress-bar { height: 3px; background: var(--border); }
+  .progress-fill { height: 100%; background: var(--indigo); transition: width .3s; }
+
+  .learn-body { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px 16px; gap: 20px; }
+
+  /* FLIP CARD */
+  .flip-wrap { width: 100%; max-width: 480px; perspective: 1200px; cursor: pointer; }
+  .flip-inner {
+    position: relative; min-height: 260px;
+    transform-style: preserve-3d; transition: transform .45s cubic-bezier(.4,0,.2,1);
+  }
+  .flip-inner.flipped { transform: rotateY(180deg); }
+  .flip-face {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    border-radius: 20px; border: 2px solid; padding: 28px 24px;
+    backface-visibility: hidden; -webkit-backface-visibility: hidden;
+    box-shadow: 0 8px 30px var(--shadow);
+  }
+  .flip-front { background: var(--card-bg); border-color: var(--card-border); }
+  .flip-back {
+    background: linear-gradient(135deg, #eef2ff 0%, #f5f3ff 100%);
+    border-color: #c7d2fe;
+    transform: rotateY(180deg);
+  }
+  .dark .flip-back { background: linear-gradient(135deg, #1e1b4b 0%, #2e1065 100%); border-color: #4338ca; }
+  .face-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .1em; margin-bottom: 14px; }
+  .face-front-label { color: var(--text3); }
+  .face-back-label { color: #6366f1; }
+  .face-text { font-size: 18px; font-weight: 600; text-align: center; white-space: pre-wrap; line-height: 1.5; }
+  .face-back-text { font-size: 16px; font-weight: 500; color: #3730a3; }
+  .dark .face-back-text { color: #c7d2fe; }
+  .flip-hint { margin-top: 16px; font-size: 12px; color: var(--text3); display: flex; align-items: center; gap: 4px; }
+
+  .vote-btns {
+    width: 100%; max-width: 480px; display: flex; gap: 12px;
+    transition: opacity .25s, transform .25s;
+  }
+  .vote-btns.hidden { opacity: 0; pointer-events: none; transform: translateY(8px); }
+  .vote-btn {
+    flex: 1; display: flex; align-items: center; justify-content: center;
+    gap: 8px; padding: 14px; border-radius: 16px; font-size: 15px;
+    font-weight: 600; border: 2px solid; cursor: pointer; transition: all .15s;
+  }
+  .vote-btn:active { transform: scale(0.96); }
+  .vote-no { background: #fff1f2; border-color: #fecdd3; color: #f43f5e; }
+  .dark .vote-no { background: rgba(159,18,57,.2); border-color: rgba(244,63,94,.3); color: #fb7185; }
+  .vote-yes { background: #f0fdf4; border-color: #bbf7d0; color: #059669; }
+  .dark .vote-yes { background: rgba(6,78,59,.2); border-color: rgba(16,185,129,.3); color: #34d399; }
+  .no-hint { font-size: 12px; color: var(--text3); text-align: center; }
+
+  /* DONE SCREEN */
+  .done-screen {
+    min-height: 100vh; min-height: 100dvh;
+    display: flex; align-items: center; justify-content: center; padding: 20px;
+    background: linear-gradient(135deg, var(--bg) 0%, #eef2ff 100%);
+  }
+  .dark .done-screen { background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); }
+  .done-card {
+    background: var(--card-bg); border: 1px solid var(--card-border);
+    border-radius: 24px; padding: 32px; text-align: center;
+    width: 100%; max-width: 340px; box-shadow: 0 20px 60px var(--shadow);
+  }
+  .done-emoji { font-size: 52px; margin-bottom: 12px; }
+  .done-title { font-size: 24px; font-weight: 700; margin-bottom: 6px; }
+  .done-sub { font-size: 14px; color: var(--text2); margin-bottom: 24px; }
+  .done-stats { display: flex; gap: 12px; margin-bottom: 24px; }
+  .done-stat {
+    flex: 1; border-radius: 16px; padding: 16px; border: 1px solid;
+  }
+  .done-stat-k { background: #f0fdf4; border-color: #bbf7d0; }
+  .dark .done-stat-k { background: rgba(6,78,59,.2); border-color: rgba(16,185,129,.3); }
+  .done-stat-u { background: #fff1f2; border-color: #fecdd3; }
+  .dark .done-stat-u { background: rgba(159,18,57,.2); border-color: rgba(244,63,94,.3); }
+  .done-num-k { font-size: 32px; font-weight: 700; color: #059669; }
+  .dark .done-num-k { color: #34d399; }
+  .done-num-u { font-size: 32px; font-weight: 700; color: #f43f5e; }
+  .done-stat-label { font-size: 12px; margin-top: 4px; color: var(--text3); }
+  .done-progress { margin-bottom: 12px; }
+  .done-prog-bar { height: 10px; border-radius: 5px; background: var(--border); overflow: hidden; }
+  .done-prog-fill { height: 100%; background: #10b981; border-radius: 5px; }
+  .done-pct { font-size: 12px; color: var(--text3); margin-top: 4px; }
+  .done-actions { display: flex; gap: 8px; }
+
+  /* MODAL */
+  .modal-overlay {
+    position: fixed; inset: 0; z-index: 50;
+    background: var(--modal-overlay); backdrop-filter: blur(4px);
+    display: flex; align-items: flex-end; justify-content: center;
+    padding: 0;
+  }
+  @media (min-width: 500px) { .modal-overlay { align-items: center; padding: 20px; } }
+  .modal-box {
+    background: var(--card-bg); border: 1px solid var(--card-border);
+    border-radius: 24px 24px 0 0; width: 100%; max-width: 420px;
+    box-shadow: 0 -8px 40px var(--shadow);
+    padding-bottom: var(--safe-bot);
+  }
+  @media (min-width: 500px) { .modal-box { border-radius: 24px; padding-bottom: 0; } }
+  .modal-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 20px 20px 16px; border-bottom: 1px solid var(--border);
+  }
+  .modal-title { font-size: 17px; font-weight: 600; }
+  .modal-close {
+    width: 32px; height: 32px; border-radius: 8px; border: none;
+    background: var(--bg); color: var(--text2); cursor: pointer;
+    display: flex; align-items: center; justify-content: center; font-size: 20px;
+  }
+  .modal-body { padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+
+  /* FORM */
+  label { display: block; font-size: 13px; font-weight: 500; color: var(--text2); margin-bottom: 6px; }
+  input, textarea {
+    width: 100%; padding: 11px 14px; border-radius: 12px;
+    border: 1.5px solid var(--border); background: var(--bg);
+    color: var(--text); font-size: 15px; font-family: inherit;
+    transition: border-color .15s, box-shadow .15s;
+    -webkit-appearance: none;
+  }
+  input:focus, textarea:focus {
+    outline: none; border-color: var(--indigo);
+    box-shadow: 0 0 0 3px rgba(99,102,241,.15);
+  }
+  textarea { resize: none; }
+
+  /* COLOR PICKER */
+  .color-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .color-opt {
+    padding: 6px 12px; border-radius: 10px; font-size: 12px; font-weight: 500;
+    border: 2px solid transparent; cursor: pointer; transition: all .15s;
+  }
+  .color-opt.selected { border-color: var(--indigo); box-shadow: 0 0 0 2px rgba(99,102,241,.25); }
+
+  .form-actions { display: flex; gap: 8px; justify-content: flex-end; padding-top: 4px; }
+
+  /* SECTION HEADER */
+  .section-hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+
+  /* PAGE TITLE */
+  .page-h1 { font-size: 28px; font-weight: 700; margin-bottom: 4px; }
+  .page-sub { font-size: 14px; color: var(--text2); margin-bottom: 24px; }
+
+  svg { flex-shrink: 0; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+// ─── Data ─────────────────────────────────────────────────────────────────────
+const DEFAULT_DATA = [
+  { id:"1", name:"🇪🇸 Spanisch", color:"amber", subtopics:[
+    { id:"1-1", name:"Vokabeln", cards:[
+      {id:"c1",front:"die Katze",back:"el gato"},
+      {id:"c2",front:"das Haus",back:"la casa"},
+      {id:"c3",front:"die Sonne",back:"el sol"},
+      {id:"c4",front:"das Wasser",back:"el agua"},
+      {id:"c5",front:"der Baum",back:"el árbol"},
+    ]},
+    { id:"1-2", name:"Grammatik", cards:[
+      {id:"c6",front:"Wie konjugiert man 'ser' in der 1. Person Singular?",back:"yo soy"},
+      {id:"c7",front:"Was ist der Unterschied zwischen 'ser' und 'estar'?",back:"'ser' = dauerhafter Zustand (Identität)\n'estar' = temporärer Zustand (Lage, Befinden)"},
+      {id:"c8",front:"Wie bildet man den Plural auf Spanisch?",back:"Endet das Wort auf Vokal → + s\nEndet es auf Konsonant → + es\nz.B. gato → gatos, ciudad → ciudades"},
+    ]},
+  ]},
+  { id:"2", name:"💻 Programmieren", color:"violet", subtopics:[
+    { id:"2-1", name:"JavaScript", cards:[
+      {id:"c9",front:"Was ist ein Closure?",back:"Eine innere Funktion, die Zugriff auf Variablen der äußeren Funktion hat, auch wenn die äußere Funktion bereits beendet wurde."},
+      {id:"c10",front:"Was macht Array.map()?",back:"Erstellt ein neues Array, indem eine Funktion auf jedes Element des Original-Arrays angewendet wird.\n\n[1,2,3].map(x => x*2) → [2,4,6]"},
+      {id:"c11",front:"Was ist der Unterschied zwischen == und ===?",back:"== vergleicht nur den Wert (mit Typumwandlung)\n=== vergleicht Wert UND Typ (streng)\n\n'3' == 3 → true\n'3' === 3 → false"},
+    ]},
+    { id:"2-2", name:"Algorithmen", cards:[
+      {id:"c12",front:"Was ist Big O Notation?",back:"Beschreibt, wie die Laufzeit oder der Speicherbedarf eines Algorithmus mit der Eingabegröße n wächst.\n\nO(1) → konstant\nO(n) → linear\nO(n²) → quadratisch"},
+      {id:"c13",front:"Was ist ein Binary Search Tree (BST)?",back:"Ein Baum, bei dem jeder Knoten folgende Eigenschaft hat:\n• Linkes Kind < Knoten\n• Rechtes Kind > Knoten\n\nErmöglicht Suche in O(log n)."},
+    ]},
+  ]},
+  { id:"3", name:"🧠 Allgemeinwissen", color:"emerald", subtopics:[
+    { id:"3-1", name:"Geschichte", cards:[
+      {id:"c14",front:"Wann fiel die Berliner Mauer?",back:"9. November 1989"},
+      {id:"c15",front:"Wer war der erste Mensch im Weltraum?",back:"Juri Gagarin (Sowjetunion), am 12. April 1961 mit dem Raumschiff Wostok 1."},
+      {id:"c16",front:"In welchem Jahr begann der Erste Weltkrieg?",back:"1914 — ausgelöst durch das Attentat auf Erzherzog Franz Ferdinand in Sarajevo am 28. Juni 1914."},
+    ]},
+    { id:"3-2", name:"Geografie", cards:[
+      {id:"c17",front:"Was ist der längste Fluss der Welt?",back:"Der Nil (Afrika) mit ca. 6.650 km — allerdings ist dies umstritten; manche Quellen nennen den Amazonas."},
+      {id:"c18",front:"Wie viele Kontinente gibt es?",back:"7 Kontinente:\nAfrika, Antarktika, Asien, Australien/Ozeanien, Europa, Nordamerika, Südamerika"},
+    ]},
+  ]},
+];
+
+const COLORS = {
+  amber:   { bg:"var(--amber-bg)",   border:"var(--amber-border)",   badge:"var(--amber-badge)",   text:"var(--amber-text)",   dot:"var(--amber-dot)",   btn:"var(--amber-btn)" },
+  violet:  { bg:"var(--violet-bg)",  border:"var(--violet-border)",  badge:"var(--violet-badge)",  text:"var(--violet-text)",  dot:"var(--violet-dot)",  btn:"var(--violet-btn)" },
+  emerald: { bg:"var(--emerald-bg)", border:"var(--emerald-border)", badge:"var(--emerald-badge)", text:"var(--emerald-text)", dot:"var(--emerald-dot)", btn:"var(--emerald-btn)" },
+  sky:     { bg:"var(--sky-bg)",     border:"var(--sky-border)",     badge:"var(--sky-badge)",     text:"var(--sky-text)",     dot:"var(--sky-dot)",     btn:"var(--sky-btn)" },
+  rose:    { bg:"var(--rose-bg)",    border:"var(--rose-border)",    badge:"var(--rose-badge)",    text:"var(--rose-text)",    dot:"var(--rose-dot)",    btn:"var(--rose-btn)" },
+};
+const COLOR_LABELS = { amber:"Bernstein", violet:"Violett", emerald:"Smaragd", sky:"Himmelblau", rose:"Rose" };
+
+// ─── State ────────────────────────────────────────────────────────────────────
+let state = {
+  dark: localStorage.getItem('kd') === '1',
+  topics: JSON.parse(localStorage.getItem('kt') || 'null') || DEFAULT_DATA,
+  view: 'home',          // home | topic | learn
+  activeTopic: null,
+  activeSubtopic: null,
+  modal: null,           // null | newTopic | newSubtopic | newCard
+  form: {},
+  editTarget: {},
+  learn: { cards:[], title:'', index:0, flipped:false, known:0, unknown:0, done:false, shuffled:[] },
+};
+
+function save() { localStorage.setItem('kt', JSON.stringify(state.topics)); }
+function uid() { return Math.random().toString(36).slice(2,9); }
+function countCards(t) { return t.subtopics.reduce((s,st)=>s+st.cards.length,0); }
+
+// ─── Render ───────────────────────────────────────────────────────────────────
+function render() {
+  document.body.classList.toggle('dark', state.dark);
+  localStorage.setItem('kd', state.dark ? '1' : '0');
+  const app = document.getElementById('app');
+  if (state.learn && state.view === 'learn') {
+    app.innerHTML = state.learn.done ? renderDone() : renderLearn();
+  } else if (state.view === 'topic') {
+    app.innerHTML = renderTopic();
+  } else {
+    app.innerHTML = renderHome();
+  }
+  bindEvents();
+}
+
+// ─── SVG icons ────────────────────────────────────────────────────────────────
+const ico = {
+  plus: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 4v16m8-8H4"/></svg>`,
+  back: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 19l-7-7 7-7"/></svg>`,
+  backSm: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 19l-7-7 7-7"/></svg>`,
+  play: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><circle cx="12" cy="12" r="9"/></svg>`,
+  trash: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>`,
+  sun: `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M2 12h2m16 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>`,
+  moon: `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z"/></svg>`,
+  x: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M6 18L18 6M6 6l12 12"/></svg>`,
+  check: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 13l4 4L19 7"/></svg>`,
+  flip: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>`,
+};
+
+function nav(left, right = '') {
+  return `<nav><div class="nav-inner">${left}<div class="nav-actions">${right}</div></div></nav>`;
+}
+
+function darkBtn() {
+  return `<button class="btn-icon" onclick="toggleDark()">${state.dark ? ico.sun : ico.moon}</button>`;
+}
+
+// ─── HOME ─────────────────────────────────────────────────────────────────────
+function renderHome() {
+  const total = state.topics.reduce((s,t)=>s+countCards(t),0);
+  const subtotal = state.topics.reduce((s,t)=>s+t.subtopics.length,0);
+
+  const statsBar = state.topics.length ? `
+    <div class="stats-bar">
+      <div class="stat-item"><div><div class="stat-num">${state.topics.length}</div><div class="stat-label">Themen</div></div></div>
+      <div class="stat-divider"></div>
+      <div class="stat-item"><div><div class="stat-num">${subtotal}</div><div class="stat-label">Unterthemen</div></div></div>
+      <div class="stat-divider"></div>
+      <div class="stat-item"><div><div class="stat-num">${total}</div><div class="stat-label">Karten</div></div></div>
+    </div>` : '';
+
+  let grid = '';
+  state.topics.forEach(t => {
+    const c = COLORS[t.color] || COLORS.sky;
+    const n = countCards(t);
+    const badges = t.subtopics.slice(0,3).map(s=>`<span class="badge" style="background:${c.badge};color:${c.text}">${s.name}</span>`).join('');
+    const extra = t.subtopics.length > 3 ? `<span class="badge" style="background:var(--bg2);color:var(--text3)">+${t.subtopics.length-3}</span>` : '';
+    grid += `
+      <div class="topic-card" style="background:${c.bg};border-color:${c.border}" onclick="goTopic('${t.id}')">
+        <div class="topic-card-dot" style="background:${c.dot}"></div>
+        <h2>${t.name}</h2>
+        <div class="topic-card-meta">${n} Karten · ${t.subtopics.length} Unterthemen</div>
+        ${t.subtopics.length ? `<div class="topic-badges">${badges}${extra}</div>` : ''}
+        <button class="learn-btn" style="background:${n?c.btn:'var(--border)'}" ${n?'':'disabled'}
+          onclick="event.stopPropagation();${n?`startLearn('${t.id}',null)`:''}">
+          ${n ? '▶ Lernen starten' : 'Keine Karten'}
+        </button>
+      </div>`;
+  });
+
+  const empty = !state.topics.length ? `
+    <div class="empty">
+      <div class="empty-icon">✨</div>
+      <h2>Los geht's!</h2>
+      <p>Erstelle dein erstes Thema und leg Karteikarten an.</p>
+      <button class="btn btn-primary" onclick="openModal('newTopic')">${ico.plus} Erstes Thema erstellen</button>
+    </div>` : '';
+
+  return `
+    ${nav(
+      `<div class="logo"><div class="logo-icon">K</div><span class="logo-text">Kartei</span></div>`,
+      `${darkBtn()}<button class="btn btn-primary btn-sm" onclick="openModal('newTopic')">${ico.plus} Thema</button>`
+    )}
+    <div class="content">
+      <div class="page-h1">Deine Lernkartei</div>
+      <div class="page-sub">Wähle ein Thema und starte direkt mit dem Lernen.</div>
+      ${statsBar}
+      ${empty}
+      ${state.topics.length ? `<div class="topic-grid">${grid}
+        <button class="add-topic-card" onclick="openModal('newTopic')">
+          <div class="add-icon">+</div>
+          <div class="add-label">Neues Thema</div>
+        </button></div>` : ''}
+    </div>
+    ${renderModal()}`;
+}
+
+// ─── TOPIC ────────────────────────────────────────────────────────────────────
+function renderTopic() {
+  const topic = state.topics.find(t=>t.id===state.activeTopic);
+  if (!topic) return renderHome();
+  const c = COLORS[topic.color] || COLORS.sky;
+  const allCards = topic.subtopics.flatMap(s=>s.cards);
+  const sub = topic.subtopics.find(s=>s.id===state.activeSubtopic);
+  const displayCards = state.activeSubtopic ? (sub?.cards||[]) : allCards;
+  const displayName = state.activeSubtopic ? sub?.name : topic.name;
+
+  const tabs = `
+    <div>
+      <div class="section-hdr">
+        <div class="section-title">Unterthemen</div>
+        <button class="btn btn-ghost btn-sm" onclick="openModal('newSubtopic')">${ico.plus} Unterthema</button>
+      </div>
+      <div class="subtopic-tabs">
+        <button class="tab ${!state.activeSubtopic?'active':''}"
+          style="${!state.activeSubtopic?`background:${c.badge};color:${c.text};border-color:transparent`:''}"
+          onclick="setSubtopic(null)">Alle (${allCards.length})</button>
+        ${topic.subtopics.map(s=>`
+          <div style="position:relative;display:inline-block">
+            <button class="tab ${state.activeSubtopic===s.id?'active':''}"
+              style="${state.activeSubtopic===s.id?`background:${c.badge};color:${c.text};border-color:transparent`:''}"
+              onclick="setSubtopic('${s.id}')">${s.name} (${s.cards.length})</button>
+            <button class="tab-del" onclick="delSubtopic('${topic.id}','${s.id}')">×</button>
+          </div>`).join('')}
+      </div>
+    </div>`;
+
+  const cardsHtml = displayCards.length === 0
+    ? `<div class="empty" style="padding:40px 20px">
+        <div class="empty-icon">🃏</div>
+        <h2 style="font-size:16px">Noch keine Karten</h2>
+        <p>Füge deine erste Karteikarte hinzu.</p>
+        <button class="btn btn-primary btn-sm" onclick="openModal('newCard')" style="margin-top:12px">${ico.plus} Karte erstellen</button>
+       </div>`
+    : `<div class="cards-grid">${displayCards.map(card=>{
+        const st = topic.subtopics.find(s=>s.cards.some(x=>x.id===card.id));
+        return `<div class="card-item">
+          <button class="card-del" onclick="delCard('${topic.id}','${st?.id}','${card.id}')">×</button>
+          <div class="card-q-label">Frage</div>
+          <div class="card-q">${esc(card.front)}</div>
+          <div class="card-divider"></div>
+          <div class="card-a-label">Antwort</div>
+          <div class="card-a">${esc(card.back)}</div>
+        </div>`;
+      }).join('')}</div>`;
+
+  return `
+    ${nav(
+      `<button class="back-btn" onclick="goHome()">${ico.back}</button>
+       <span style="font-size:14px;font-weight:500;color:var(--text2)">${topic.name}</span>`,
+      `${darkBtn()}
+       <button class="btn btn-ghost btn-sm" style="color:#f43f5e" onclick="delTopic('${topic.id}')">${ico.trash}</button>`
+    )}
+    <div class="content">
+      <div class="topic-header" style="background:${c.bg};border-color:${c.border}">
+        <div>
+          <h1>${topic.name}</h1>
+          <p>${countCards(topic)} Karten · ${topic.subtopics.length} Unterthemen</p>
+        </div>
+        <button class="btn btn-primary" ${!allCards.length?'disabled':''} onclick="startLearn('${topic.id}',null)">
+          ${ico.play} Alle lernen
+        </button>
+      </div>
+      ${tabs}
+      <div>
+        <div class="section-hdr">
+          <div class="section-title">${displayName} · ${displayCards.length} Karten</div>
+          <div style="display:flex;gap:8px">
+            ${displayCards.length?`<button class="btn btn-ghost btn-sm" onclick="startLearn('${topic.id}','${state.activeSubtopic||''}')">${ico.play} Lernen</button>`:''}
+            <button class="btn btn-ghost btn-sm" onclick="openModal('newCard')">${ico.plus} Karte</button>
+          </div>
+        </div>
+        ${cardsHtml}
+      </div>
+    </div>
+    ${renderModal()}`;
+}
+
+// ─── LEARN ────────────────────────────────────────────────────────────────────
+function renderLearn() {
+  const L = state.learn;
+  const card = L.shuffled[L.index];
+  const pct = Math.round((L.index / L.shuffled.length) * 100);
+
+  return `
+    <div class="learn-screen">
+      <div class="learn-header">
+        <button class="back-btn" onclick="exitLearn()" style="gap:4px">${ico.backSm} Beenden</button>
+        <div class="learn-title-block">
+          <div class="learn-subtitle">${L.title}</div>
+          <div class="learn-counter">Karte ${L.index+1} von ${L.shuffled.length}</div>
+        </div>
+        <div class="learn-score">
+          <span class="score-k">✓ ${L.known}</span>
+          <span class="score-u">✗ ${L.unknown}</span>
+        </div>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+      <div class="learn-body">
+        <div class="flip-wrap" onclick="flipCard()">
+          <div class="flip-inner ${L.flipped?'flipped':''}" id="flipInner">
+            <div class="flip-face flip-front">
+              <div class="face-label face-front-label">Frage</div>
+              <div class="face-text">${esc(card.front)}</div>
+              <div class="flip-hint">${ico.flip} Tippen zum Umdrehen</div>
+            </div>
+            <div class="flip-face flip-back">
+              <div class="face-label face-back-label">Antwort</div>
+              <div class="face-text face-back-text">${esc(card.back)}</div>
+            </div>
+          </div>
+        </div>
+        <div class="vote-btns ${L.flipped?'':'hidden'}">
+          <button class="vote-btn vote-no" onclick="vote(false)">${ico.x} Nicht gewusst</button>
+          <button class="vote-btn vote-yes" onclick="vote(true)">${ico.check} Gewusst</button>
+        </div>
+        ${!L.flipped?`<div class="no-hint">Karte aufdecken, dann bewerten</div>`:''}
+      </div>
+    </div>`;
+}
+
+function renderDone() {
+  const L = state.learn;
+  const total = L.shuffled.length;
+  const pct = Math.round((L.known/total)*100);
+  const emoji = pct>=70?'🎉':pct>=40?'💪':'📚';
+  return `
+    <div class="done-screen">
+      <div class="done-card">
+        <div class="done-emoji">${emoji}</div>
+        <div class="done-title">Runde beendet!</div>
+        <div class="done-sub">${L.title}</div>
+        <div class="done-stats">
+          <div class="done-stat done-stat-k">
+            <div class="done-num-k">${L.known}</div>
+            <div class="done-stat-label">Gewusst</div>
+          </div>
+          <div class="done-stat done-stat-u">
+            <div class="done-num-u">${L.unknown}</div>
+            <div class="done-stat-label">Nicht gewusst</div>
+          </div>
+        </div>
+        <div class="done-progress">
+          <div class="done-prog-bar"><div class="done-prog-fill" style="width:${pct}%"></div></div>
+          <div class="done-pct">${pct}% richtig</div>
+        </div>
+        <div class="done-actions">
+          <button class="btn btn-ghost" style="flex:1;justify-content:center" onclick="exitLearn()">Zurück</button>
+          <button class="btn btn-primary" style="flex:1;justify-content:center" onclick="restartLearn()">Nochmal</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+// ─── MODAL ────────────────────────────────────────────────────────────────────
+function renderModal() {
+  if (!state.modal) return '';
+  let body = '';
+  if (state.modal === 'newTopic') {
+    const colorOpts = Object.keys(COLORS).map(col=>{
+      const c = COLORS[col];
+      const sel = (state.form.color||'sky') === col;
+      return `<button class="color-opt ${sel?'selected':''}" style="background:${c.badge};color:${c.text}" onclick="setFormColor('${col}')">${COLOR_LABELS[col]}</button>`;
+    }).join('');
+    body = `
+      <div><label>Name</label><input id="fi1" type="text" placeholder="z.B. Spanisch, Mathe …" value="${esc(state.form.name||'')}" oninput="state.form.name=this.value" onkeydown="if(event.key==='Enter')addTopic()"></div>
+      <div><label>Farbe</label><div class="color-row">${colorOpts}</div></div>
+      <div class="form-actions">
+        <button class="btn btn-ghost" onclick="closeModal()">Abbrechen</button>
+        <button class="btn btn-primary" onclick="addTopic()">Erstellen</button>
+      </div>`;
+  } else if (state.modal === 'newSubtopic') {
+    body = `
+      <div><label>Name</label><input id="fi1" type="text" placeholder="z.B. Grammatik, Vokabeln …" value="${esc(state.form.name||'')}" oninput="state.form.name=this.value" onkeydown="if(event.key==='Enter')addSubtopic()"></div>
+      <div class="form-actions">
+        <button class="btn btn-ghost" onclick="closeModal()">Abbrechen</button>
+        <button class="btn btn-primary" onclick="addSubtopic()">Erstellen</button>
+      </div>`;
+  } else if (state.modal === 'newCard') {
+    body = `
+      <div><label>Vorderseite (Frage)</label><textarea id="fi1" rows="3" placeholder="Was ist …?" oninput="state.form.front=this.value">${esc(state.form.front||'')}</textarea></div>
+      <div><label>Rückseite (Antwort)</label><textarea rows="3" placeholder="Die Antwort lautet …" oninput="state.form.back=this.value">${esc(state.form.back||'')}</textarea></div>
+      <div class="form-actions">
+        <button class="btn btn-ghost" onclick="closeModal()">Fertig</button>
+        <button class="btn btn-primary" onclick="addCard()">Hinzufügen &amp; weiter</button>
+      </div>`;
+  }
+
+  const titles = { newTopic:'Thema erstellen', newSubtopic:'Unterthema erstellen', newCard:'Karte hinzufügen' };
+  return `
+    <div class="modal-overlay" onclick="if(event.target===this)closeModal()">
+      <div class="modal-box">
+        <div class="modal-header">
+          <div class="modal-title">${titles[state.modal]}</div>
+          <button class="modal-close" onclick="closeModal()">×</button>
+        </div>
+        <div class="modal-body">${body}</div>
+      </div>
+    </div>`;
+}
+
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ─── Event Binding ────────────────────────────────────────────────────────────
+function bindEvents() {
+  setTimeout(()=>{ const f = document.getElementById('fi1'); if(f) f.focus(); }, 80);
+  document.addEventListener('keydown', (e)=>{ if(e.key==='Escape'&&state.modal) closeModal(); }, {once:true});
+}
+
+// ─── Actions ──────────────────────────────────────────────────────────────────
+function toggleDark() { state.dark = !state.dark; render(); }
+function goHome() { state.view='home'; state.activeTopic=null; state.activeSubtopic=null; render(); }
+function goTopic(id) { state.activeTopic=id; state.activeSubtopic=null; state.view='topic'; render(); }
+function setSubtopic(id) { state.activeSubtopic=id; render(); }
+function openModal(m) { state.modal=m; state.form={}; render(); }
+function closeModal() { state.modal=null; state.form={}; render(); }
+function setFormColor(c) { state.form.color=c; render(); }
+
+function addTopic() {
+  if (!state.form.name?.trim()) return;
+  state.topics.push({ id:uid(), name:state.form.name.trim(), color:state.form.color||'sky', subtopics:[] });
+  save(); closeModal();
+}
+function delTopic(id) {
+  if (!confirm('Thema löschen?')) return;
+  state.topics = state.topics.filter(t=>t.id!==id);
+  save(); goHome();
+}
+function addSubtopic() {
+  if (!state.form.name?.trim()) return;
+  const t = state.topics.find(x=>x.id===state.activeTopic);
+  if (t) t.subtopics.push({ id:uid(), name:state.form.name.trim(), cards:[] });
+  save(); closeModal();
+}
+function delSubtopic(tid, sid) {
+  const t = state.topics.find(x=>x.id===tid);
+  if (t) t.subtopics = t.subtopics.filter(s=>s.id!==sid);
+  if (state.activeSubtopic===sid) state.activeSubtopic=null;
+  save(); render();
+}
+function addCard() {
+  if (!state.form.front?.trim() || !state.form.back?.trim()) return;
+  const t = state.topics.find(x=>x.id===state.activeTopic);
+  const container = state.activeSubtopic ? t?.subtopics.find(s=>s.id===state.activeSubtopic) : t?.subtopics[0];
+  if (container) {
+    container.cards.push({ id:uid(), front:state.form.front.trim(), back:state.form.back.trim() });
+    save(); state.form={front:'',back:''}; render();
+  } else if (t) {
+    // If no subtopic exists, create a default one
+    const st = { id:uid(), name:'Allgemein', cards:[{ id:uid(), front:state.form.front.trim(), back:state.form.back.trim() }] };
+    t.subtopics.push(st);
+    save(); state.form={front:'',back:''}; render();
+  }
+}
+function delCard(tid, sid, cid) {
+  const t = state.topics.find(x=>x.id===tid);
+  const container = sid ? t?.subtopics.find(s=>s.id===sid) : null;
+  if (container) container.cards = container.cards.filter(c=>c.id!==cid);
+  save(); render();
+}
+
+function startLearn(topicId, subtopicId) {
+  const t = state.topics.find(x=>x.id===topicId);
+  if (!t) return;
+  const cards = subtopicId
+    ? (t.subtopics.find(s=>s.id===subtopicId)?.cards || [])
+    : t.subtopics.flatMap(s=>s.cards);
+  if (!cards.length) return;
+  const shuffled = [...cards].sort(()=>Math.random()-.5);
+  state.learn = { cards, title:t.name, index:0, flipped:false, known:0, unknown:0, done:false, shuffled };
+  state.view='learn'; render();
+}
+
+function flipCard() {
+  state.learn.flipped = !state.learn.flipped; render();
+}
+
+function vote(known) {
+  const L = state.learn;
+  if (known) L.known++; else L.unknown++;
+  if (L.index+1 >= L.shuffled.length) { L.done=true; render(); return; }
+  L.flipped=false;
+  setTimeout(()=>{ L.index++; render(); }, 150);
+}
+
+function restartLearn() {
+  const L = state.learn;
+  state.learn = { ...L, index:0, flipped:false, known:0, unknown:0, done:false,
+    shuffled:[...L.shuffled].sort(()=>Math.random()-.5) };
+  render();
+}
+
+function exitLearn() {
+  state.view = state.activeTopic ? 'topic' : 'home';
+  state.learn = {};
+  render();
+}
+
+// ─── Boot ─────────────────────────────────────────────────────────────────────
+render();
+</script>
+</body>
+</html>
